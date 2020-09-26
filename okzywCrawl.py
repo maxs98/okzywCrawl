@@ -45,7 +45,7 @@ class okzywCrawl():
             self.log.info(e)
 
     async def consumer(self,task_id,q):
-        # 从二级页面获得想要的内容
+        # 从页面获取具体的内容，为避免还没生产出来就消费，先等待2秒。
         await asyncio.sleep(2)
         print("任务{}开始了！队列共有{}个值".format(task_id,q.qsize()))
         self.log.info("任务{}开始了！队列共有{}个值".format(task_id,q.qsize()))
@@ -64,7 +64,7 @@ class okzywCrawl():
                 q.task_done()          
 
     async def porducer(self,q):
-        # 获得每个二级页面的链接，然后加入队列
+        # 生产者方法：获得每个二级页面的链接然后加入队列。
         pages=['http://www.okzyw.com/?m=vod-index-pg-{}.html'.format(i) for i in range(self.start,self.end)]
         detail_links_xpath = "body//a[contains(@href,'m=vod-detail-id-')]/@href"
         for url in pages:
@@ -74,6 +74,11 @@ class okzywCrawl():
             urls = await self.parse_html(html,detail_links_xpath)
             print(urls)
             [await q.put(url) for url in urls]
+        '''
+        第二个循环在队列的尾部加入几个特殊的任务，内容为None。由于消费者在取值的时候是按顺序取的（先进先出）
+        所以执行到尾部如果发现取出的值为None就结束当前任务。这样就结束了。10个协程是可以复用的。这也省下了资源
+        提高了执行效率。
+        '''
         for i in range(self.maxworks):
             await q.put(None)
         print("生产队列里有{}个值".format(q.qsize()))
@@ -90,7 +95,9 @@ class okzywCrawl():
         q = asyncio.Queue()
         # tasks = [self.second_task(task_id,q) for task_id in range(self.qsize)]
         producer = loop.create_task(self.porducer(q))
+        # 启动了maxworks个协程,去消费producer生产出来的链接，最后还有None结束保障机制。
         consumers = [loop.create_task(self.consumer(task_id,q)) for task_id in range(self.maxworks)]
+        # 两个协程是同时启动的，由于生产者的生产动作可能慢于消费者，所以消费者函数启动时等待了2秒。
         await asyncio.wait(consumers + [producer])
         # complete = await asyncio.gather(*tasks)
         # if asyncio.as_completed(task1):
