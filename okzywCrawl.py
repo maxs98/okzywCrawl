@@ -18,8 +18,8 @@ class okzywCrawl():
         filename="d:\\log.txt")
         self.log = logging.getLogger('')
         # 开始结束页数
-        self.start = 1
-        self.end = 3
+        self.start = 7
+        self.end = 9
         # 最大协程数，控制有多少个协程同时进行
         self.maxworks = 10
         # self.qsize = 0
@@ -84,7 +84,7 @@ class okzywCrawl():
         # return "Task1 finished!"
 
     async def eventloop(self):
-        # 异步执行fist_task，完成后再并发执行second_task
+        # 异步执行
         warnings.simplefilter('always', ResourceWarning)
         loop.set_debug(True)
         loop.slow_callback_duration = 0.001
