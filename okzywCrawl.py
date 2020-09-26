@@ -22,7 +22,6 @@ class okzywCrawl():
         self.end = 9
         # 最大协程数，控制有多少个协程同时进行
         self.maxworks = 10
-        # self.qsize = 0
 
     async def parse_html(self,html,xpathstr):
         # 解析html得到标签值
