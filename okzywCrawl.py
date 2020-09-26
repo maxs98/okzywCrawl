@@ -67,6 +67,7 @@ class okzywCrawl():
         # 生产者方法：获得每个二级页面的链接然后加入队列。
         pages=['http://www.okzyw.com/?m=vod-index-pg-{}.html'.format(i) for i in range(self.start,self.end)]
         detail_links_xpath = "body//a[contains(@href,'m=vod-detail-id-')]/@href"
+        # 第一个循环往队列里加入URL任务链接
         for url in pages:
             # self.log.info("url is {}".format(url))
             print(url)
