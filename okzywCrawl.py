@@ -42,8 +42,7 @@ class okzywCrawl():
                     # self.log.info("========",type(html))
                     return html
         except Exception as e:
-            pass
-            # self.log.info(e)
+            self.log.info(e)
 
     async def consumer(self,task_id,q):
         # 从页面获取具体的内容，为避免还没生产出来就消费，先等待2秒。
