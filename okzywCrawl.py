@@ -18,8 +18,8 @@ class okzywCrawl():
         filename="d:\\log.txt")
         self.log = logging.getLogger('')
         # 开始结束页数
-        self.start = 7
-        self.end = 9
+        self.start = 1
+        self.end = 2
         # 最大协程数，控制有多少个协程同时进行
         self.maxworks = 10
 
@@ -42,7 +42,8 @@ class okzywCrawl():
                     # self.log.info("========",type(html))
                     return html
         except Exception as e:
-            self.log.info(e)
+            pass
+            # self.log.info(e)
 
     async def consumer(self,task_id,q):
         # 从页面获取具体的内容，为避免还没生产出来就消费，先等待2秒。
@@ -89,15 +90,12 @@ class okzywCrawl():
         # return "Task1 finished!"
 
     async def eventloop(self):
-        # 异步执行
-        warnings.simplefilter('always', ResourceWarning)
-        loop.set_debug(True)
-        loop.slow_callback_duration = 0.001
+        # 异步执行        
         q = asyncio.Queue()
         # tasks = [self.second_task(task_id,q) for task_id in range(self.qsize)]
-        producer = loop.create_task(self.porducer(q))
+        producer = asyncio.create_task(self.porducer(q))
         # 启动了maxworks个协程,去消费producer生产出来的链接，最后还有None结束保障机制。
-        consumers = [loop.create_task(self.consumer(task_id,q)) for task_id in range(self.maxworks)]
+        consumers = [asyncio.create_task(self.consumer(task_id,q)) for task_id in range(self.maxworks)]
         # 两个协程是同时启动的，由于生产者的生产动作可能慢于消费者，所以消费者函数启动时等待了2秒。
         await asyncio.wait(consumers + [producer])
         # complete = await asyncio.gather(*tasks)
@@ -108,8 +106,15 @@ class okzywCrawl():
         
 if __name__ == '__main__':
     start = time.time()
-    loop = asyncio.get_event_loop()
+    print(f"程序开始于：{time.strftime('%X')}")
+    # warnings.simplefilter('always', ResourceWarning)
+    # loop.set_debug(True)
+    # loop.slow_callback_duration = 0.001
+    # loop = asyncio.get_event_loop()
+    # 改成loop方式是老版本的写法但不会报错。现在保留新版本写法，报错但结果没有问题。
     okzywCrawl = okzywCrawl()
-    loop.run_until_complete(okzywCrawl.eventloop())
-    loop.close()
-    print('最终耗时：',time.time()-start)
+    asyncio.run(okzywCrawl.eventloop())
+    # loop.run_until_complete(okzywCrawl.eventloop())
+    # loop.close()
+    print(f"程序结束于：{time.strftime('%X')}")
+    print(f'最终耗时：{time.time()-start}')
